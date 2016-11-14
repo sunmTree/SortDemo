@@ -1,0 +1,5 @@
+# SortDemo
+Launcher字母索引和排序
+
+
+暂时完成了ListView向下滑动时SideBar上方显示效果可以及时更新，但是下面却不能，还有就是SideBar中的计算还未实现

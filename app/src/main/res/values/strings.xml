@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SortDemo</string>
+    <string name="modelT">model_title</string>
+    <string name="modelC">model_name</string>
+</resources>

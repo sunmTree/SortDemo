@@ -12,6 +12,7 @@ import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,6 +21,7 @@ import com.apus.adapter.SortAdapter;
 import com.apus.bean.CharacterParser;
 import com.apus.bean.CitySortModel;
 import com.apus.bean.PinyinComparator;
+import com.apus.utils.ScreenUtils;
 import com.apus.view.SideBar;
 
 import java.util.ArrayList;
@@ -43,11 +45,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private PinyinComparator pinyinComparator;
     private static final String TAG = "SCROLL_TAG";
+    private static final String TAG_TEST = "SCROLL_TAG_TEST";
 
     // 用来记录字母个数的HashMap
     private HashMap<String, Integer> charMaps;
     private int screenHeight;
     private List<String> letters;
+
+    private static int itemHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,9 +121,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         Display defaultDisplay = getWindowManager().getDefaultDisplay();
         int width = defaultDisplay.getWidth();
-        screenHeight = defaultDisplay.getHeight();
-        Log.d(TAG, "width: " + width + " height: " + screenHeight);
+        screenHeight = defaultDisplay.getHeight() - ScreenUtils.getStatusBarHeight(this);  // 实际ListView的高度
+        Log.d(TAG, "width: " + width + " height: " + screenHeight + " statusBar len:" + ScreenUtils.getStatusBarHeight(this));
     }
+
 
     @Override
     protected void onResume() {
@@ -128,63 +134,113 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                sideBar.setChats(getLenChars(screenHeight));
+                sideBar.setChats(getLenChars(screenHeight, false));
             }
         });
     }
 
     /***
      * 根据长度计算cLength对应的字母集合
-     * @param cLength  目标长度
-     * @return  字母集合
+     *
+     * @param cLength 目标长度
+     * @return 字母集合
      */
-    public List<String> getLenChars(int cLength) {
+    public List<String> getLenChars(int cLength, boolean onTop) {
+        Log.d(TAG, "with the ideal cLength: " + cLength);
         List<String> stringList = new ArrayList<String>();
         int lenCount = 0;
+        int lenCountOld = 0; // 记录上一个高度值
+        View childAt = recyclerView.getChildAt(0);
+        if (childAt == null || cLength < childAt.getHeight())
+            return stringList;
+
+        LinearLayout layout = (LinearLayout) childAt;
+        TextView textView = (TextView) layout.getChildAt(0);
+        int visibility = textView.getVisibility();
+        int height;  // 计算item高度
+        if (visibility == View.VISIBLE){
+            height = childAt.getHeight();
+        }else {
+            height = childAt.getHeight()*2;
+        }
         final int cSize = letters.size();
+
         for (int i = 0; i < cSize; i++) {
-
             int value = charMaps.get(letters.get(i));
-            View childAt = recyclerView.getChildAt(0);
-
-            if (childAt != null) {
-                int height = childAt.getHeight();
-                lenCount += height;
-                if (value > 1) {
-                    lenCount += (value - 1) * height / 2;
-                }
+            if (value == 0)
+                continue;
+            lenCountOld = lenCount;
+            lenCount += height;
+            if (value > 1) {
+                lenCount += (value - 1) * height / 2;  //有重复时累计item
             }
-            if (lenCount < cLength) {
-                stringList.add(letters.get(i));
+
+            if (onTop) {
+                if (lenCount < cLength)
+                    stringList.add(letters.get(i));
+                else
+                    break;
+            } else {
+                if (lenCount < cLength || (lenCountOld < cLength && cLength < lenCount)) {       //累加高度小于目标高度时符合显示条件
+                    stringList.add(letters.get(i));
+                } else
+                    break;
             }
 
         }
-        Log.d(TAG,"all char lenCount: "+lenCount);
+        Log.d(TAG, "lenCount: " + lenCount + " old: " + lenCountOld);
         return stringList;
     }
 
-    public Integer getLengthFromNum(int number){
-        int lenCount = 0;
-        int charLength = 0;
-        final int cSize = letters.size();
-        for (int i=0; i< cSize; i++){
-            int value = charMaps.get(letters.get(i));
-            lenCount += value;
-            if (lenCount <= number){
-                View childAt = recyclerView.getChildAt(0);
+    /**
+     * 根据传入的number计算出已经滑动的距离
+     * @param number
+     * @return
+     */
+    public Integer getLengthFromNum(int number) {
+        int lenCount = 0;   // current items number
+        int lenCountOld = 0;   // last items number
+        int charLength = 0;    // scroll listen
+        final int cSize = letters.size();  // char's size
+        // TODO get each item's height
+        View childAt = recyclerView.getChildAt(0);
+        if (childAt == null) {
+            return 0;
+        }
+        LinearLayout layout = (LinearLayout) childAt;
+        TextView textView = (TextView) layout.getChildAt(0);
+        int visibility = textView.getVisibility();
+        int height;  // 计算item高度
+        if (visibility == View.VISIBLE){
+            height = childAt.getHeight();
+        }else {
+            height = childAt.getHeight()*2;
+        }
 
-                if (childAt != null) {
-                    int height = childAt.getHeight();
+        for (int i = 0; i < cSize; i++) {
+            int value = charMaps.get(letters.get(i));
+            lenCountOld = lenCount;
+            lenCount += value;
+            if (lenCount <= number) {
+                charLength += height;
+                if (value > 1) {
+                    charLength += (value - 1) * height / 2;
+                }
+            } else if (number > lenCountOld && number < lenCount){
+                int fieldCount = number - lenCountOld;
+                if (fieldCount == 1){
                     charLength += height;
-                    if (value > 1) {
-                        charLength += (value - 1) * height / 2;
-                    }
+                    Log.d(TAG_TEST,"fieldCount = 1 charLength: " + charLength + " number: " + number + " lenCount: " + lenCount+" height: "+lenCountOld);
                 }
 
+                if (fieldCount > 1){
+                    charLength += (fieldCount - 1) * height / 2+height;
+                    Log.d(TAG_TEST," charLength: " + charLength + " number: " + number + " lenCount: " + lenCount+" height: "+lenCountOld);
+                }
             }else
                 break;
         }
-        Log.d(TAG," charLength: "+charLength+" number: "+number+" lenCount: "+lenCount);
+        Log.d(TAG, " charLength: " + charLength + " number: " + number + " lenCount: " + lenCount+" height: "+lenCountOld);
         return charLength;
     }
 
@@ -208,8 +264,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//        Intent intent = new Intent(MainActivity.this, QuickSideBarActivity.class);
-//        startActivity(intent);
+        Intent intent = new Intent(MainActivity.this, AppListActivity.class);
+        startActivity(intent);
     }
 
     private boolean scrollStateChanged = false; // 判断用户滑动过的标志
@@ -228,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-        Log.d("SCROLL_TAG", "firstVisibleItem: " + firstVisibleItem + " visibleItemCount: " + visibleItemCount + " totalItemCount: " + totalItemCount+ " scrollY: " + getScrollY());
+        Log.d("SCROLL_TAG", "firstVisibleItem: " + firstVisibleItem + " visibleItemCount: " + visibleItemCount + " totalItemCount: " + totalItemCount + " scrollY: " + getScrollY());
         if (firstVisibleItem != currentItem) {
             haveScroll = true;
             currentItem = firstVisibleItem;
@@ -236,20 +292,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             haveScroll = false;
         }
 
-        List<String> lenChars = getLenChars(getScrollY() + screenHeight);
-        List<String> lenChars1 = getLenChars(getScrollY());
+        List<String> lenChars = getLenChars(getScrollY() + screenHeight, false);
+        List<String> lenChars1 = getLenChars(getScrollY(), true);
         printList(lenChars);
         printList(lenChars1);
         lenChars.removeAll(lenChars1);
         sideBar.setChats(lenChars);
     }
 
-    public void printList(List<String> strings){
+    public void printList(List<String> strings) {
+        if (strings == null)
+            return;
         StringBuilder sb = new StringBuilder();
-        for (int i=0; i< strings.size(); i++){
-            sb.append(strings.get(i)+"\t");
+        for (int i = 0; i < strings.size(); i++) {
+            sb.append(strings.get(i) + "\t");
         }
-        Log.d(TAG,"class "+strings.getClass().getSimpleName()+" "+sb.toString());
+        Log.d(TAG, "class " + strings.getClass().getSimpleName() + " " + sb.toString());
     }
 
     public int getScrollY() {

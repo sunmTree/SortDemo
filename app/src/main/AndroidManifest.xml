@@ -15,7 +15,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".QuickSideBarActivity"></activity>
+        <activity android:name=".QuickSideBarActivity" />
+        <activity android:name=".AppListActivity"></activity>
     </application>
 
 </manifest>

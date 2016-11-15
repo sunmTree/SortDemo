@@ -268,16 +268,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         startActivity(intent);
     }
 
-    private boolean scrollStateChanged = false; // 判断用户滑动过的标志
-    private boolean haveScroll = false;         // 判断已经滑动过的标志
-
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
-//        Log.d("SCROLL_TAG","scrollState: "+scrollState);
-        if (scrollState > 0)
-            scrollStateChanged = true;
-        else
-            scrollStateChanged = false;
     }
 
     private static int currentItem = 0;
@@ -285,13 +277,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
         Log.d("SCROLL_TAG", "firstVisibleItem: " + firstVisibleItem + " visibleItemCount: " + visibleItemCount + " totalItemCount: " + totalItemCount + " scrollY: " + getScrollY());
-        if (firstVisibleItem != currentItem) {
-            haveScroll = true;
-            currentItem = firstVisibleItem;
-        } else {
-            haveScroll = false;
-        }
-
         List<String> lenChars = getLenChars(getScrollY() + screenHeight, false);
         List<String> lenChars1 = getLenChars(getScrollY(), true);
         printList(lenChars);

@@ -12,6 +12,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
 
+import com.apus.sortdemo.MainActivity;
+import com.apus.utils.ListUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,19 +68,12 @@ public class SideBar extends View {
         height = getHeight();
         final int len = b.length;
         final int singleHeight = height / len;
-
+        ListUtils.printList(chats,"SCROLL_SIDEBAR");
         for (int i=0; i < len; i++){
             paint.setColor(Color.rgb(33,65,98));
             paint.setTypeface(Typeface.DEFAULT_BOLD);
             paint.setAntiAlias(true);
             paint.setTextSize(30);
-
-            // 选中的状态
-            if (i == choose){
-                paint.setColor(Color.parseColor("#3399ff"));
-                paint.setFakeBoldText(true);
-            }
-
             if (chats.contains(b[i])){
                 paint.setColor(Color.parseColor("#3399ff"));
                 paint.setFakeBoldText(true);
@@ -128,9 +124,15 @@ public class SideBar extends View {
         return true;
     }
 
-    public void setChats(List<String> chats) {
+    private int count = 0;
+    public void setChats(String msg, List<String> chats) {
+        if ("OnResume".equals(msg) && count > 0)
+            return;
+        else
+            count++;
         this.chats = chats;
-        invalidate();
+        ListUtils.printList(chats,msg+" SCROLL_SIDEBAR_SET");
+        postInvalidate();
     }
 
     public void setB(String[] b) {

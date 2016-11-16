@@ -21,6 +21,7 @@ import com.apus.adapter.SortAdapter;
 import com.apus.bean.CharacterParser;
 import com.apus.bean.CitySortModel;
 import com.apus.bean.PinyinComparator;
+import com.apus.utils.ListUtils;
 import com.apus.utils.ScreenUtils;
 import com.apus.view.SideBar;
 
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         sideBar.setmOnTouchingLetterChangedListener(new SideBar.OnTouchingLetterChangedListener() {
             @Override
             public void onTouchingLetterChanged(String s) {
+                Log.i(TAG,"sideBar set touchListener");
                 int position = adapter.getPositionForSection(s.charAt(0));
                 if (position != -1) {
                     recyclerView.setSelection(position);
@@ -125,18 +127,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Log.d(TAG, "width: " + width + " height: " + screenHeight + " statusBar len:" + ScreenUtils.getStatusBarHeight(this));
     }
 
-
+    private boolean firstFlag = true;
     @Override
     protected void onResume() {
         super.onResume();
-        // TODO 计算屏幕宽度内存在的字母
-        ViewTreeObserver observer = this.getWindow().getDecorView().getViewTreeObserver();
-        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                sideBar.setChats(getLenChars(screenHeight, false));
-            }
-        });
+        if (firstFlag){
+            // TODO 计算屏幕宽度内存在的字母
+            ViewTreeObserver observer = this.getWindow().getDecorView().getViewTreeObserver();
+            observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    sideBar.setChats("OnResume",getLenChars(screenHeight, false));
+                }
+            });
+            firstFlag = false;
+        }
+
     }
 
     /***
@@ -221,26 +227,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             int value = charMaps.get(letters.get(i));
             lenCountOld = lenCount;
             lenCount += value;
-            if (lenCount <= number) {
+            if (lenCount <= number) { // 两种情况，一种是完全被遮挡的item
                 charLength += height;
                 if (value > 1) {
                     charLength += (value - 1) * height / 2;
                 }
-            } else if (number > lenCountOld && number < lenCount){
+            } else if (number > lenCountOld && number < lenCount){  // item显示一半，遮挡一半
                 int fieldCount = number - lenCountOld;
                 if (fieldCount == 1){
                     charLength += height;
-                    Log.d(TAG_TEST,"fieldCount = 1 charLength: " + charLength + " number: " + number + " lenCount: " + lenCount+" height: "+lenCountOld);
                 }
-
                 if (fieldCount > 1){
                     charLength += (fieldCount - 1) * height / 2+height;
-                    Log.d(TAG_TEST," charLength: " + charLength + " number: " + number + " lenCount: " + lenCount+" height: "+lenCountOld);
                 }
             }else
                 break;
         }
-        Log.d(TAG, " charLength: " + charLength + " number: " + number + " lenCount: " + lenCount+" height: "+lenCountOld);
         return charLength;
     }
 
@@ -272,28 +274,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public void onScrollStateChanged(AbsListView view, int scrollState) {
     }
 
-    private static int currentItem = 0;
 
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
         Log.d("SCROLL_TAG", "firstVisibleItem: " + firstVisibleItem + " visibleItemCount: " + visibleItemCount + " totalItemCount: " + totalItemCount + " scrollY: " + getScrollY());
         List<String> lenChars = getLenChars(getScrollY() + screenHeight, false);
         List<String> lenChars1 = getLenChars(getScrollY(), true);
-        printList(lenChars);
-        printList(lenChars1);
+        ListUtils.printList(lenChars);
+        ListUtils.printList(lenChars1);
         lenChars.removeAll(lenChars1);
-        sideBar.setChats(lenChars);
+        sideBar.setChats("onScroll",lenChars);
     }
 
-    public void printList(List<String> strings) {
-        if (strings == null)
-            return;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < strings.size(); i++) {
-            sb.append(strings.get(i) + "\t");
-        }
-        Log.d(TAG, "class " + strings.getClass().getSimpleName() + " " + sb.toString());
-    }
+
 
     public int getScrollY() {
         View c = recyclerView.getChildAt(0);
@@ -304,5 +297,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int top = c.getTop();
         Log.d("SCROLL_TAG", "top: " + top + " height: " + getLengthFromNum(firstVisiblePosition));
         return -top + getLengthFromNum(firstVisiblePosition);
+    }
+
+    private SlideInfoChangedListener changedListener;
+
+    public void setChangedListener(SlideInfoChangedListener changedListener) {
+        this.changedListener = changedListener;
+    }
+
+    public interface SlideInfoChangedListener{
+        void slideInfoList(List<String> lenCs);
     }
 }

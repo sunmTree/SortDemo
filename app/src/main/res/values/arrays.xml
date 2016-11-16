@@ -52,22 +52,22 @@
         <item>昌平3</item>
         <item>东海</item>
         <item>诶诶</item>
-        <item>E2</item>
-        <item>I1</item>
-        <item>I2</item>
-        <item>I3</item>
-        <item>科林</item>
-        <item>蒙古</item>
-        <item>哦样</item>
-        <item>排位</item>
-        <item>排位2</item>
-        <item>排位3</item>
-        <item>U1</item>
-        <item>U3</item>
-        <item>V3</item>
-        <item>VT3</item>
-        <item>万国</item>
-        <item>王都</item>
+        <!--<item>E2</item>-->
+        <!--<item>I1</item>-->
+        <!--<item>I2</item>-->
+        <!--<item>I3</item>-->
+        <!--<item>科林</item>-->
+        <!--<item>蒙古</item>-->
+        <!--<item>哦样</item>-->
+        <!--<item>排位</item>-->
+        <!--<item>排位2</item>-->
+        <!--<item>排位3</item>-->
+        <!--<item>U1</item>-->
+        <!--<item>U3</item>-->
+        <!--<item>V3</item>-->
+        <!--<item>VT3</item>-->
+        <!--<item>万国</item>-->
+        <!--<item>王都</item>-->
     </string-array>
 
 </resources>

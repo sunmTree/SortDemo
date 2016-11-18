@@ -2,6 +2,7 @@ package com.apus.adapter;
 
 import android.animation.Animator;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -68,7 +69,8 @@ public class AllAppsListAdapter extends RecyclerView.Adapter<AllAppsListAdapter.
 
     private void openAppInfo(View v, Context mContext, AppInfo appInfo) {
         String packageName = appInfo.getPackageName();
-
+        Intent intent = mContext.getPackageManager().getLaunchIntentForPackage(packageName);
+        mContext.startActivity(intent);
     }
 
     @Override
@@ -307,7 +309,7 @@ public class AllAppsListAdapter extends RecyclerView.Adapter<AllAppsListAdapter.
         for (int i = 1; i < childCount; i++) {
             View appItemView = appIconContainer.getChildAt(i);
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) appItemView.getLayoutParams();
-            params.leftMargin = allAppsItemMarginLeft + (10 * (i - 1));
+            params.leftMargin = allAppsItemMarginLeft + (200 * (i));  // i-1 的情况下，第一个APP图标和文字之间不存在间隔，改正为i
             appItemView.setLayoutParams(params);
         }
     }
@@ -343,11 +345,16 @@ public class AllAppsListAdapter extends RecyclerView.Adapter<AllAppsListAdapter.
 
     private void bindAppItemView(FrameLayout appIconContainer, int position) {
         View itemView = appIconContainer.getChildAt(0);
+        if (itemView instanceof FrameLayout){
+            FrameLayout frameLayout = (FrameLayout) itemView;
+            itemView = frameLayout.getChildAt(0);
+            appIconContainer = frameLayout;
+        }
         TextView charView = null;
         if (itemView instanceof TextView) {
             charView = (TextView) itemView;
             ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) charView.getLayoutParams();
-            params.width = mContext.getResources().getDimensionPixelOffset(R.dimen.dp_16);
+            params.width = mContext.getResources().getDimensionPixelOffset(R.dimen.dp_36);
             params.height = IMAGE_SIZE;
             charView.setPadding(charView.getPaddingLeft(), 6, 0, 0);
             charView.setLayoutParams(params);
@@ -381,6 +388,7 @@ public class AllAppsListAdapter extends RecyclerView.Adapter<AllAppsListAdapter.
             ImageView image = (ImageView) appIconContainer.getChildAt(i + 1);
             if (image != null) {
                 AllAppInfo appInfo = rowItem.appList.get(i);
+                Log.d(TAG,"section: "+firstCharacter+" appInfo: "+appInfo.appInfo.getAppName());
                 if (appInfo == null || appInfo.appInfo == null) {
                     continue;
                 }
@@ -388,10 +396,19 @@ public class AllAppsListAdapter extends RecyclerView.Adapter<AllAppsListAdapter.
                 image.setTag(appInfo);
             }
         }
+
+        for (int i = n; i < APP_COUNT_PER_ROW; i++){
+            ImageView image = (ImageView) appIconContainer.getChildAt(i + 1);
+            if (image != null) {
+                image.setImageDrawable(null);
+                image.setTag(null);
+            }
+        }
     }
 
     @Override
     public int getItemCount() {
+        Log.d(TAG, "AllAppsListAdapter count: " + mRowItemList.size());
         return mRowItemList.size();
     }
 

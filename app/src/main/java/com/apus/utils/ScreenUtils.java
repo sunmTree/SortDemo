@@ -1,6 +1,7 @@
 package com.apus.utils;
 
 import android.content.Context;
+import android.content.res.Resources;
 
 import java.lang.reflect.Field;
 
@@ -10,7 +11,7 @@ import java.lang.reflect.Field;
 
 public class ScreenUtils {
 
-    public static int getStatusBarHeight(Context context){
+    public static int getStatusBarHeight(Context context) {
         Class<?> c = null;
         Object obj = null;
         Field field = null;
@@ -26,4 +27,10 @@ public class ScreenUtils {
         }
         return statusBarHeight;
     }
+
+    public static float dip2px(float dipValue) {
+        final float scale = Resources.getSystem().getDisplayMetrics().density;
+        return (dipValue * scale + 0.5f);
+    }
+
 }

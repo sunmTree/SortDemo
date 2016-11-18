@@ -11,4 +11,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"></android.support.v7.widget.RecyclerView>
 
+    <com.apus.view.AllAppsIndexScroller
+        android:id="@+id/allAppIndexScroller"
+        android:layout_width="40dp"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"/>
+
 </RelativeLayout>

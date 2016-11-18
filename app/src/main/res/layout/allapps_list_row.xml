@@ -6,7 +6,9 @@
     <FrameLayout
         android:id="@+id/app_icon_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_margin="@dimen/dp_16"
+        android:background="@color/c_gray">
 
     </FrameLayout>
 </FrameLayout>
